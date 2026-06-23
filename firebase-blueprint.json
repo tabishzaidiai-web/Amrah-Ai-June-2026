@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["User", "Admin"] },
+        "tier": { "type": "string", "enum": ["Free", "Pro", "Boutique", "Atelier", "Maison"] }
+      },
+      "required": ["id", "email", "role", "tier"]
+    },
+    "Generation": {
+      "title": "Generation",
+      "description": "A generated AI asset",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "url": { "type": "string" },
+        "type": { "type": "string", "enum": ["image", "video"] }
+      },
+      "required": ["id", "userId", "url", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile collection"
+    },
+    "/users/{userId}/generations/{generationId}": {
+      "schema": "Generation",
+      "description": "User-specific generations subcollection"
+    }
+  }
+}

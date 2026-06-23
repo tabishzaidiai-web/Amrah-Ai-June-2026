@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isEmailVerified() { return request.auth.token.email_verified == true; }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isEmailVerified() && request.resource.data.keys().hasAll(['id', 'email', 'role', 'tier']) && request.resource.data.role == 'User';
+      allow update: if isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tier', 'name', 'avatar']);
+      
+      // Generations Subcollection
+      match /generations/{generationId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isEmailVerified() && request.resource.data.keys().hasAll(['id', 'userId', 'url', 'type']);
+      }
+    }
+  }
+}
